@@ -42,7 +42,7 @@ filetype plugin indent on   " required (vundle)
 
 " Airline config
 let g:airline_powerline_fonts=1
-let g:airline_theme='ubaryd'
+let g:airline_theme='laederon'
 set laststatus=2
 
 " UltiSnips config
