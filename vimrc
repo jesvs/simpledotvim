@@ -4,7 +4,6 @@ filetype off
 set rtp+=~/.vim/bundle/vundle/
 call vundle#rc()
 
-"syntax enable
 
 set encoding=utf-8
 set fileencoding=utf-8
@@ -69,6 +68,10 @@ if has('gui_macvim')
   set transparency=2
 endif
 
+if has('gui_gtk')
+  set guifont=Source\ Code\ Pro\ Semi-Bold\ 12
+endif
+
 set noswapfile
 set nobackup
 set showcmd       " shows what you are typing as a command
@@ -131,3 +134,5 @@ function! ScssMake()
     execute 'silent !scss --compass % '.cssoutput
   endif
 endfunction
+
+syntax enable
