@@ -1,9 +1,8 @@
 set nocompatible
-filetype off
+filetype off  " required by Vundle
 
 set rtp+=~/.vim/bundle/vundle/
 call vundle#rc()
-
 
 set encoding=utf-8
 set fileencoding=utf-8
@@ -14,21 +13,24 @@ set history=4096
 Bundle 'gmarik/vundle'
 
 " color schemes
-Bundle 'tomasr/molokai'
-Bundle 'altercation/vim-colors-solarized'
-Bundle 'nanotech/jellybeans.vim'
+"Bundle 'tomasr/molokai'
+"Bundle 'altercation/vim-colors-solarized'
+"Bundle 'nanotech/jellybeans.vim'
 Bundle 'junegunn/seoul256.vim'
+"Bundle 'Lokaltog/vim-distinguished'
 
 " Syntax
 Bundle 'tpope/vim-haml'
 Bundle 'StanAngeloff/php.vim'
 Bundle 'othree/html5.vim'
+Bundle 'slim-template/vim-slim'
 "Bundle 'sheerun/vim-polyglot'
+Bundle 'pangloss/vim-javascript'
 
 " Other plugins
 Bundle 'godlygeek/tabular'
 Bundle 'Valloric/YouCompleteMe'
-Bundle 'marijnh/tern_for_vim'
+"Bundle 'marijnh/tern_for_vim' " Causing issues with YCM (?)
 Bundle 'tpope/vim-surround'
 Bundle 'Lokaltog/vim-easymotion'
 Bundle 'Townk/vim-autoclose'
@@ -54,6 +56,7 @@ nmap <LEADER>t :ToggleWord<CR>
 " colorscheme jellybeans
 let g:seoul256_background=234
 colorscheme seoul256
+"colorscheme distinguished
 
 set background=dark
 
@@ -64,8 +67,8 @@ endif
 
 " Font config
 if has('gui_macvim')
-  set guifont=Sauce\ Code\ Powerline:h15
-  set transparency=2
+  set guifont=Sauce\ Code\ Powerline:h13
+  set transparency=1
 endif
 
 if has('gui_gtk')
@@ -81,10 +84,8 @@ set expandtab     " Expand tab to spaces
 set smarttab
 set shiftwidth=2
 set softtabstop=2
-" Tab completion
 set wildmenu
 set wildmode=list:longest,full
-"set relativenumber
 set number        " line numbers
 set ignorecase
 set incsearch     " Incremental searching
@@ -93,6 +94,10 @@ set nohidden      " Remove buffer when closing tab
 set cul           " highlight current line
 set scrolloff=4   " keep 4 lines above and below cursor
 set nowrap        " no soft wrap long lines
+set synmaxcol=100
+set ttyfast
+set ttyscroll=3
+set lazyredraw
 
 let mapleader=',' " change leader to ,
 
@@ -108,9 +113,10 @@ nnoremap <silent> <Leader>/ :nohlsearch<CR>
 
 " --- FILETYPE SPECIFIC SETTINGS
 " enable column highlight on white space indented languages
-autocmd FileType python,haml setlocal cursorcolumn 
-" autocmd FileType php setlocal noautoindent nosmartindent nocindent indent=<CR>
-autocmd FileType php setlocal smartindent autoindent cindent indentexpr=<CR>
+autocmd! FileType python,haml setlocal cursorcolumn 
+" autocmd! FileType php setlocal noautoindent nosmartindent nocindent indent=<CR>
+autocmd! FileType php setlocal smartindent autoindent cindent indentexpr=<CR>
+au BufNewFile,BufRead *.slim set filetype=slim
 
 " --- Functions
 au BufWritePost *.haml call HamlMake()
@@ -135,4 +141,4 @@ function! ScssMake()
   endif
 endfunction
 
-syntax enable
+syntax on
