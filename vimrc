@@ -15,7 +15,7 @@ Bundle 'gmarik/vundle'
 " color schemes
 "Bundle 'tomasr/molokai'
 "Bundle 'altercation/vim-colors-solarized'
-"Bundle 'nanotech/jellybeans.vim'
+Bundle 'nanotech/jellybeans.vim'
 Bundle 'junegunn/seoul256.vim'
 "Bundle 'Lokaltog/vim-distinguished'
 
@@ -24,22 +24,23 @@ Bundle 'tpope/vim-haml'
 Bundle 'StanAngeloff/php.vim'
 Bundle 'othree/html5.vim'
 Bundle 'slim-template/vim-slim'
-"Bundle 'sheerun/vim-polyglot'
 Bundle 'pangloss/vim-javascript'
 
 " Other plugins
 Bundle 'godlygeek/tabular'
 Bundle 'Valloric/YouCompleteMe'
-"Bundle 'marijnh/tern_for_vim' " Causing issues with YCM (?)
+" Causing issues (with YCM ?)
+"Bundle 'marijnh/tern_for_vim' 
 Bundle 'tpope/vim-surround'
 Bundle 'Lokaltog/vim-easymotion'
-Bundle 'Townk/vim-autoclose'
+" delimitMate: suggested by YCM author instead of vim-autoclose
+Bundle 'Raimondi/delimitMate' 
 Bundle 'bling/vim-airline'
 Bundle 'kien/ctrlp.vim'
 Bundle 'vim-scripts/toggle_words.vim'
 Bundle 'SirVer/ultisnips'
 
-filetype plugin indent on   " required (vundle)
+filetype plugin indent on " required (vundle)
 
 " Airline config
 let g:airline_powerline_fonts=1
@@ -53,9 +54,9 @@ let g:UltiSnipsExpandTrigger="<c-j>"
 nmap <LEADER>t :ToggleWord<CR>
 
 " colorscheme molokai
-" colorscheme jellybeans
-let g:seoul256_background=234
-colorscheme seoul256
+colorscheme jellybeans
+"let g:seoul256_background=234
+"colorscheme seoul256
 "colorscheme distinguished
 
 set background=dark
@@ -110,16 +111,22 @@ nnoremap <CR> :w<CR>
 map ; :
 " clear highlight
 nnoremap <silent> <Leader>/ :nohlsearch<CR>
+" exit insert mode by typing jj
+imap jj <Esc>
+
+" remove ALL autocommands to prevent duplication when sourcing .vimrc
+autocmd! 
 
 " --- FILETYPE SPECIFIC SETTINGS
 " enable column highlight on white space indented languages
-autocmd! FileType python,haml setlocal cursorcolumn 
-" autocmd! FileType php setlocal noautoindent nosmartindent nocindent indent=<CR>
-autocmd! FileType php setlocal smartindent autoindent cindent indentexpr=<CR>
-au BufNewFile,BufRead *.slim set filetype=slim
+autocmd FileType python,haml setlocal cursorcolumn 
+" autocmd FileType php setlocal noautoindent nosmartindent nocindent indent=<CR>
+autocmd FileType php setlocal smartindent autoindent cindent indentexpr=<CR>
+autocmd BufNewFile,BufRead *.slim set filetype=slim
+autocmd BufNewFile,BufRead .bash_profile set filetype=sh
 
 " --- Functions
-au BufWritePost *.haml call HamlMake()
+autocmd BufWritePost *.haml call HamlMake()
 " Inspired by Mark Hansen's python dependent function
 " http://markhansen.co.nz/autocompiling-haml/
 " Create an empty .autohaml to auto compile your haml files on save
@@ -132,13 +139,48 @@ function! HamlMake()
 endfunction
 
 " Create an empty .autoscss to auto compile your scss files on save
-au BufWritePost *.scss call ScssMake()
+autocmd BufWritePost *.scss call ScssMake()
 function! ScssMake()
   if filereadable(expand('%:p:h')."/.autoscss")
     let scssinput = expand('%:p')
     let cssoutput = substitute(scssinput, ".scss", ".css", "")
-    execute 'silent !scss --compass % '.cssoutput
+    silent execute '!scss -q --compass % '.cssoutput
   endif
 endfunction
 
-syntax on
+" Enable syntax highlighting when buffers are displayed in a window through
+" :argdo and :bufdo, which disable the Syntax autocmd event to speed up
+" processing.
+augroup EnableSyntaxHighlighting
+  " Filetype processing does happen, so we can detect a buffer initially
+  " loaded during :argdo / :bufdo through a set filetype, but missing
+  " b:current_syntax. Also don't do this when the user explicitly turned off
+  " syntax highlighting via :syntax off.
+  " The following autocmd is triggered twice:
+  " 1. During the :...do iteration, where it is inactive, because
+  " 'eventignore' includes "Syntax". This speeds up the iteration itself.
+  " 2. After the iteration, when the user re-enters a buffer / window that was
+  " loaded during the iteration. Here is becomes active and enables syntax
+  " highlighting. Since that is done buffer after buffer, the delay doesn't
+  " matter so much.
+  " Note: When the :...do command itself edits the window (e.g. :argdo
+  " tabedit), the BufWinEnter event won't fire and enable the syntax when the
+  " window is re-visited. We need to hook into WinEnter, too. Note that for
+  " :argdo split, each window only gets syntax highlighting as it is entered.
+  " Alternatively, we could directly activate the normally effectless :syntax
+  " enable through :set eventignore-=Syntax, but that would also cause the
+  " slowdown during the iteration Vim wants to avoid.
+  " Note: Must allow nesting of autocmds so that the :syntax enable triggers
+  " the ColorScheme event. Otherwise, some highlighting groups may not be
+  " restored properly.
+  autocmd! BufWinEnter,WinEnter * nested if exists('syntax_on') && ! exists('b:current_syntax') && ! empty(&l:filetype) && index(split(&eventignore, ','), 'Syntax') == -1 | syntax enable | endif
+
+  " The above does not handle reloading via :bufdo edit!, because the
+  " b:current_syntax variable is not cleared by that. During the :bufdo,
+  " 'eventignore' contains "Syntax", so this can be used to detect this
+  " situation when the file is re-read into the buffer. Due to the
+  " 'eventignore', an immediate :syntax enable is ignored, but by clearing
+  " b:current_syntax, the above handler will do this when the reloaded buffer
+  " is displayed in a window again.
+  autocmd! BufRead * if exists('syntax_on') && exists('b:current_syntax') && ! empty(&l:filetype) && index(split(&eventignore, ','), 'Syntax') != -1 | unlet! b:current_syntax | endif
+augroup END
